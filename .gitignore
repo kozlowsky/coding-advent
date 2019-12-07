@@ -96,3 +96,11 @@ fabric.properties
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
 
+!/.idea/
+.idea/.gitignore
+.idea/codeStyles/
+.idea/kotlinc.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+advent-of-code-2019.iml
