@@ -5,19 +5,19 @@ import shared.Utils
 fun main(args: Array<String>) {
     val solution = Solution()
 
-    println("Answer: ${solution.runPartOne(Utils.readTextFile("src/dayone/input.txt"))}")
-    println("Answer: ${solution.runPartTwo(Utils.readTextFile("src/dayone/input.txt"))}")
+    println("Answer: ${solution.calculateFirstAnswer(Utils.readTextFile("src/dayone/input.txt").map { it.toInt() })}")
+    println("Answer: ${solution.calculateSecondAnswer(Utils.readTextFile("src/dayone/input.txt").map { it.toInt() })}")
 }
 
 class Solution {
 
-    fun runPartOne(values: List<String>): Int {
+    fun calculateFirstAnswer(values: List<Int>): Int {
         return values.sumBy {
             calculateRequiredFuel(it.toInt())
         }
     }
 
-    fun runPartTwo(values: List<String>): Int {
+    fun calculateSecondAnswer(values: List<Int>): Int {
         return values.sumBy {
             calculateRequiredFuel(it.toInt(), 0)
         }
