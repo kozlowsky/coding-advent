@@ -1,9 +1,9 @@
-package daytwo
+package day2
 
 import shared.Utils
 
 fun main(args: Array<String>) {
-    val values = Utils.readTextFile("src/daytwo/input.txt")
+    val values = Utils.readTextFile("src/day2/input.txt")
     val intCode = values[0].split(",").map { it.toInt() }
 
     val solution = Solution()
@@ -46,7 +46,6 @@ class Solution {
     }
 
     private fun findPairThatReproducesGivenOutput(intcode: List<Int>, givenOutput: Int): Pair<Int, Int> {
-
         val newIntCode = intcode.toMutableList()
         for (noun in 0..99) {
             for (verb in 0..99) {
@@ -57,6 +56,7 @@ class Solution {
                 if (output == givenOutput) return Pair(noun, verb)
             }
         }
+
         return Pair(-1, -1)
     }
 }
