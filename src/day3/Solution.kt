@@ -5,6 +5,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+
 fun main(args: Array<String>) {
     val input = Utils.readTextFile("src/day3/input.txt")
 
@@ -16,7 +17,6 @@ fun main(args: Array<String>) {
         }
     }
 
-
     val solution = Solution()
     println("Answer One: ${solution.calculateFirstAnswer(wires, Point(0, 0))}")
 }
@@ -24,38 +24,61 @@ fun main(args: Array<String>) {
 
 fun <T> List<T>.tail() = drop(1)
 
-data class Point(val x: Int, val y: Int)
+data class Point(val x: Int, val y: Int) {
+    fun isValid() = x < Int.MAX_VALUE && y < Int.MAX_VALUE
+    fun manhattanDistance(other: Point): Int {
+        return abs(this.x - other.x) + abs(this.y - other.y)
+    }
+}
 
 data class Move(val direction: Char, val amount: Int)
 
+data class Segment(val first: Point, val second: Point) {
+    fun intersect(other: Segment): Point {
+        val a1 = this.second.y - this.first.y
+        val b1 = this.first.x - this.second.x
+        val c1 = a1 * (this.first.x) + b1 * (this.first.y)
+
+        val a2 = other.second.y - other.first.y
+        val b2 = other.first.x - other.second.x
+        val c2 = a2 * (other.first.x) + b2 * (other.first.y)
+
+        val det = a1 * b2 - a2 * b1
+
+        if (det == 0) return Point(Int.MAX_VALUE, Int.MAX_VALUE)
+
+        val x = (b2 * c1 - b1 * c2) / det
+        val y = (a1 * c2 - a2 * c1) / det
+
+        return if (
+            (min(this.first.x, this.second.x) <= x) && x <= max(this.first.x, this.second.x) &&
+            (min(this.first.y, this.second.y) <= y) && y <= max(this.first.y, this.second.y) &&
+            (min(other.first.x, other.second.x) <= x) && x <= max(other.first.x, other.second.x) &&
+            (min(other.first.y, other.second.y) <= y) && y <= max(other.first.y, other.second.y)
+        ) Point(x, y)
+        else Point(Int.MAX_VALUE, Int.MAX_VALUE)
+    }
+}
+
 class Solution {
 
-    fun calculateFirstAnswer(wires: List<List<Move>>, startingPoint: Point): Pair<Point, Int> {
-        val wiresPathPoints = wires.map {
-            getPathPoints(mutableListOf(startingPoint), it, startingPoint)
+    fun calculateFirstAnswer(wires: List<List<Move>>, startingPoint: Point): Int {
+        val (first, second) = wires.map {
+            getPathPoints(it, startingPoint)
         }
 
-        val intersectionPoints = findIntersectionPoints(wiresPathPoints)
-
-        val distances = countManhattanDistances(intersectionPoints, startingPoint)
-        println(distances)
-
-        return distances[0]
+        return findIntersectionPoints(first, second)
+            .filter { it != startingPoint }
+            .map { it.manhattanDistance(startingPoint) }
+            .min()!!
     }
 
-    private fun countManhattanDistances(points: List<Point>, startingPoint: Point): List<Pair<Point, Int>> {
-        return points.map {
-            Pair(it, abs(startingPoint.x - it.x) + abs(startingPoint.y - it.y))
-        }.sortedBy { it.second }
-    }
-
-    private fun getPathPoints(currentPoints: MutableList<Point>, moves: List<Move>, currentPoint: Point): List<Point> {
-        return if (moves.isNotEmpty()) {
-            val nextPoint = getNextPoint(moves[0], currentPoint)
-            currentPoints.add(nextPoint)
-            getPathPoints(currentPoints, moves.tail(), nextPoint)
-        } else {
-            currentPoints
+    private fun getPathPoints(
+        moves: List<Move>,
+        currentPoint: Point
+    ): List<Point> {
+        return moves.fold(mutableListOf(currentPoint)) { acc, move ->
+            (acc + getNextPoint(move, acc.last())).toMutableList()
         }
     }
 
@@ -69,54 +92,19 @@ class Solution {
         }
     }
 
-    private fun findIntersectionPoints(wires: List<List<Point>>): List<Point> {
-        val intersectionPoints = mutableListOf<Point>()
-        for (i in 0 until wires[0].size - 1) {
-            for (j in 0 until wires[1].size - 1) {
-
-
-                val intersectionPoint = findIntersectionPointBetweenTwoSegments(
-                    wires[0][i],
-                    wires[0][i + 1],
-                    wires[1][j],
-                    wires[1][j + 1]
-                )
-
-                if (intersectionPoint.x < Int.MAX_VALUE && !intersectionPoints.contains(intersectionPoint))
-                    intersectionPoints.add(intersectionPoint)
-            }
-        }
-
-        return intersectionPoints
-    }
-
-    private fun findIntersectionPointBetweenTwoSegments(
-        A: Point,
-        B: Point,
-        C: Point,
-        D: Point
-    ): Point {
-        val a1 = B.y - A.y
-        val b1 = A.x - B.x
-        val c1 = a1 * (A.x) + b1 * (A.y)
-
-        val a2 = D.y - C.y
-        val b2 = C.x - D.x
-        val c2 = a2 * (C.x) + b2 * (C.y)
-
-        val det = a1 * b2 - a2 * b1
-
-        if (det == 0) return Point(Int.MAX_VALUE, Int.MAX_VALUE)
-
-        val x = (b2 * c1 - b1 * c2) / det
-        val y = (a1 * c2 - a2 * c1) / det
-
-        return if (
-            (min(A.x, B.x) <= x) && x <= max(A.x, B.x) &&
-            (min(A.y, B.y) <= y) && y <= max(A.y, B.y) &&
-            (min(C.x, D.x) <= x) && x <= max(C.x, D.x) &&
-            (min(C.y, D.y) <= y) && y <= max(C.y, D.y)
-        ) Point(x, y)
-        else Point(Int.MAX_VALUE, Int.MAX_VALUE)
+    private fun findIntersectionPoints(wireOne: List<Point>, wireTwo: List<Point>): List<Point> {
+        return wireOne
+            .zipWithNext()
+            .map { Segment(it.first, it.second) }
+            .map { firstSegment ->
+                wireTwo.zipWithNext()
+                    .map {
+                        Segment(it.first, it.second)
+                    }.map { secondSegment ->
+                        firstSegment.intersect(secondSegment)
+                    }.filter { point ->
+                        point.isValid()
+                    }
+            }.flatten()
     }
 }
