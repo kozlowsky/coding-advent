@@ -2,7 +2,7 @@ package day2
 
 import shared.Utils
 
-fun main(args: Array<String>) {
+fun main() {
     val values = Utils.readTextFile("src/day2/input.txt")
     val intCode = values[0].split(",").map { it.toInt() }
 

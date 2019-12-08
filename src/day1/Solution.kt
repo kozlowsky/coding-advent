@@ -2,7 +2,7 @@ package day1
 
 import shared.Utils
 
-fun main(args: Array<String>) {
+fun main() {
     val input = Utils.readTextFile("src/day1/input.txt")
     val solution = Solution()
 
